@@ -12,109 +12,147 @@ import (
 	"strings"
 	"time"
 )
+
 var Clients []*Client
 var Up = websocket.Upgrader{
-	ReadBufferSize: 1024,
+	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 }
+
 type Client struct {
 	Id       string
-	Status  byte//0为未准备 1为准备
+	Status   byte //0为未准备 1为准备
 	Username string
 	Coon     *websocket.Conn
 	Typ      byte //0为红方 1为黑方
+	Room     Room
 }
 
 //HandleNewConnection function creates a new client and stores it
 func HandleNewConnection(c *gin.Context) {
-	coon,err := Up.Upgrade(c.Writer,c.Request,nil)
+	coon, err := Up.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		log.Println(err)
-		c.JSON(http.StatusOK,gin.H{
-			"status":10022,
-			"info":"failed",
+		c.JSON(http.StatusOK, gin.H{
+			"status": 10022,
+			"info":   "failed",
 		})
 		return
-	}else {
-		if len(Clients)>=2 {
-			c.JSON(http.StatusOK,gin.H{
-				"info":"房间人数已满",
-			})
-			return
-		}
-		log.Println("new connection")
-		if len(Clients)==0 {
-			newClient := Client{
-				Id:       GenUserId(),
-				Username: "",
-				Coon:     coon,
-				Status:   0,
-				Typ:      0,
-			}
-			Clients =append(Clients,&newClient)
-		}
-		newClient:= Client{
-			Id :      GenUserId(),
-			Username: "",
-			Coon:     coon,
-			Status:   0,
-			Typ:      1,
-		}
-		Clients =append(Clients,&newClient)
-		defer coon.Close()
-
 	}
+	log.Println("new connection")
+	newClient := Client{
+		Id:       GenUserId(),
+		Username: "",
+		Coon:     coon,
+		Status:   0,
+		Typ:      0,
+		Room:     Room{Id: GenRandomNum()},
+	}
+	Clients = append(newClient.Room.Clients, &newClient)
+	var intChan chan int
+	intChan = make(chan int, 1)
+	intChan <- 1
+	if len(newClient.Room.Clients) < 2 {
+		<-intChan
+	}
+	if len(newClient.Room.Clients) == 2 {
+		newClient.Room.Clients[0].Typ = 0
+		newClient.Room.Clients[1].Typ = 1
+		intChan <- 1
+	}
+	defer func(coon *websocket.Conn) {
+		err := coon.Close()
+		if err != nil {
+			log.Println(err)
+		}
+	}(coon)
+
 }
+
 //GenUserId function generates a random 10 character ID
-func GenUserId() string{
+func GenUserId() string {
 	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890")
 	rand.Seed(time.Now().UnixNano())
 
-	b:= make([]rune,10)
-	for i := range b{
+	b := make([]rune, 10)
+	for i := range b {
 		b[i] = letters[rand.Intn(len(letters))]
 	}
 	return string(b)
 }
-func ChangeStatus(c *gin.Context,client *Client)  {
-	if client.Status==0 {
-		client.Status=1
-		c.JSON(200,gin.H{
-			"status":"已准备",
-		})
+func GenRandomNum() string {
+	var letters = []rune("1234567890")
+	rand.Seed(time.Now().UnixNano())
+	b := make([]rune, 6)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
+}
+func ChangeStatus(client *Client) {
+	if client.Status == 0 {
+		client.Status = 1
 		return
-	}else {
+	} else {
 		client.Status = 0
-		c.JSON(200,gin.H{
-			"status":"未准备",
-		})
 		return
 	}
 }
-func (client *Client)StartListening() {
-	if len(Clients)!=2 {
-		return
-	}
-	for _,j:=range Clients {
-		if j.Status == 0{
-			return
+func (client *Client) StartListening() {
+	for {
+		if len(client.Room.Clients) == 2 {
+			client.Room.Clients[0].Typ = 0
+			client.Room.Clients[1].Typ = 1
+			break
 		}
 	}
+	if Clients[0].Status != 1 || Clients[1].Status != 1 {
+		for {
+			_, content, err := client.Coon.ReadMessage()
+			if err != nil {
+				log.Println(err)
+				err := client.Coon.Close()
+				if err != nil {
+					log.Println(err)
+					return
+				}
+				return
+			}
+			if content != nil {
+				ChangeStatus(client) //输入任意内容切换准备状态
+			}
+		}
+	}
+	service.InitBoard()
+	var Chan chan byte
+	Chan = make(chan byte, 1)
 	for {
-		_,content,err := client.Coon.ReadMessage()
+		Chan <- 1
+		_, content, err := client.Coon.ReadMessage()
 		if err != nil {
 			log.Println(err)
-			client.Coon.Close()
+			err := client.Coon.Close()
+			if err != nil {
+				log.Println(err)
+				return
+			}
 			return
 		}
-		str := strings.Split(string(content)," ")
-		if len(str) != 2{//第一个数字指定要走的棋子，第二个数字决定case
+		str := strings.Split(string(content), " ")
+		if len(str) != 2 { //第一个数字指定要走的棋子，第二个数字决定case
 			fmt.Println("can not parse it")
+			continue
+		}
+		IChoose, ICase := str[0], str[1]
+		choose, _ := strconv.Atoi(IChoose)
+		cases, _ := strconv.Atoi(ICase)
+		service.Operate(choose, client, cases)
+		err = client.Coon.WriteJSON(service.Board)
+		if err != nil {
+			log.Println(err)
 			return
 		}
-		IChoose,ICase := str[0],str[1]
-		choose,_:=strconv.Atoi(IChoose)
-		cases,_:=strconv.Atoi(ICase)
-		service.Operate(choose,client,cases)
+		<-Chan //防止双方同时走子(但是其实会出现一方一直走子的情况吧.
+
 	}
 }

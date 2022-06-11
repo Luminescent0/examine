@@ -5,85 +5,86 @@ import (
 	"fmt"
 )
 
-var board [10][9]int
+var Board [10][9]int
+
 const (
-	RedGen = 1 //帅
-	RedSold = 2//仕
-	RedMin = 3//相
-	RedHorse = 4//马
-	RedVeh = 5//车
-	RedArm = 6//兵
-	RedGun= 7//炮
-	BlackGen = 11 //帅
-	BlackSold = 12 //仕
-	BlackMin = 13 //象
+	RedGen     = 1  //帅
+	RedSold    = 2  //仕
+	RedMin     = 3  //相
+	RedHorse   = 4  //马
+	RedVeh     = 5  //车
+	RedArm     = 6  //兵
+	RedGun     = 7  //炮
+	BlackGen   = 11 //帅
+	BlackSold  = 12 //仕
+	BlackMin   = 13 //象
 	BlackHorse = 14 //马
-	BlackVeh = 15 //车
-	BlackArm = 16//兵
-	BlackGun = 17//炮
+	BlackVeh   = 15 //车
+	BlackArm   = 16 //兵
+	BlackGun   = 17 //炮
 
 )
 
-func Operate(choose int,client *api.Client,cases int) {
+func Operate(choose int, client *api.Client, cases int) {
 	switch choose {
 	case 1:
-		HorseMove(client,cases)
+		HorseMove(client, cases)
 
 	case 2:
-		MinMove(client,cases)
+		MinMove(client, cases)
 	case 3:
-		SoldMove(client,cases)
+		SoldMove(client, cases)
 	}
 
 }
 func InitBoard() {
-	board[0][0]= BlackVeh
-	board[0][8]= BlackVeh
-	board[0][1]= BlackHorse
-	board[0][7]= BlackHorse
-	board[0][2]= BlackMin
-	board[0][6]= BlackMin
-	board[0][3]= BlackSold
-	board[0][5]= BlackSold
-	board[0][4]= BlackGen
-	board[2][1]= BlackGun
-	board[2][7]= BlackGun
-	for i:=0;i<9;i=i+2{
-		board[3][i]= BlackArm
+	Board[0][0] = BlackVeh
+	Board[0][8] = BlackVeh
+	Board[0][1] = BlackHorse
+	Board[0][7] = BlackHorse
+	Board[0][2] = BlackMin
+	Board[0][6] = BlackMin
+	Board[0][3] = BlackSold
+	Board[0][5] = BlackSold
+	Board[0][4] = BlackGen
+	Board[2][1] = BlackGun
+	Board[2][7] = BlackGun
+	for i := 0; i < 9; i = i + 2 {
+		Board[3][i] = BlackArm
 	}
-	board[9][0]= RedVeh
-	board[9][8]= RedVeh
-	board[9][1]= RedHorse
-	board[9][7]= RedHorse
-	board[9][2]= RedMin
-	board[9][6]= RedMin
-	board[9][3]= RedSold
-	board[9][5]= RedSold
-	board[9][4]= RedGen
-	board[7][1]= RedGun
-	board[7][7]= RedGun
-	for i:=0;i<9;i=i+2{
-		board[6][i]= RedArm
+	Board[9][0] = RedVeh
+	Board[9][8] = RedVeh
+	Board[9][1] = RedHorse
+	Board[9][7] = RedHorse
+	Board[9][2] = RedMin
+	Board[9][6] = RedMin
+	Board[9][3] = RedSold
+	Board[9][5] = RedSold
+	Board[9][4] = RedGen
+	Board[7][1] = RedGun
+	Board[7][7] = RedGun
+	for i := 0; i < 9; i = i + 2 {
+		Board[6][i] = RedArm
 	}
-	fmt.Println(board)
+	fmt.Println(Board)
 }
 
-func FindChess(Chess int) (i,j int) {
-	for i,v := range board {
-		for j,v2 := range v{
-			if v2 == Chess{
-				fmt.Printf("board[%v][%v]",i,j)
-				return i,j
+func FindChess(Chess int) (i, j int) {
+	for i, v := range Board {
+		for j, v2 := range v {
+			if v2 == Chess {
+				fmt.Printf("board[%v][%v]", i, j)
+				return i, j
 			}
 		}
 	}
-	fmt.Println(i,j)
-	return i,j
+	fmt.Println(i, j)
+	return i, j
 }
-func HorseMove(client *api.Client,cases int) {
+func HorseMove(client *api.Client, cases int) {
 	if client.Typ == 0 {
-		i,j:= FindChess(RedHorse)
-		board[i][j] = 0
+		i, j := FindChess(RedHorse)
+		Board[i][j] = 0
 		switch cases { //这里爆格的话终端会报错，但是不能返回给用户（。
 		case 1:
 			i = i + 1
@@ -110,16 +111,16 @@ func HorseMove(client *api.Client,cases int) {
 			i = i + 2
 			j = j + 1
 		}
-		if board[i][j] == 0 || board[i][j] > 8 { //防止吃掉自己的子（。
-			board[i][j] = RedHorse
+		if Board[i][j] == 0 || Board[i][j] > 8 { //防止吃掉自己的子（。
+			Board[i][j] = RedHorse
 		} else {
 			return
 		}
 	} else {
-		i,j:= FindChess(BlackHorse)
+		i, j := FindChess(BlackHorse)
 		fmt.Printf("board[%v][%v]", i, j)
-		board[i][j] = 0
-		switch cases{ //这里爆格的话终端会报错，但是不能返回给用户（。
+		Board[i][j] = 0
+		switch cases { //这里爆格的话终端会报错，但是不能返回给用户（。
 		case 1:
 			i = i + 1
 			j = j + 2
@@ -145,19 +146,19 @@ func HorseMove(client *api.Client,cases int) {
 			i = i + 2
 			j = j + 1
 		}
-		if board[i][j] < 8 {
-			board[i][j] = BlackHorse
+		if Board[i][j] < 8 {
+			Board[i][j] = BlackHorse
 		} else {
 			return
 		}
 	}
 }
 
-func MinMove(client *api.Client,cases int) {
+func MinMove(client *api.Client, cases int) {
 	if client.Typ == 0 {
-		i,j:= FindChess(RedMin)
-		fmt.Printf("board[%v][%v]",i,j)
-		board[i][j]=0
+		i, j := FindChess(RedMin)
+		fmt.Printf("board[%v][%v]", i, j)
+		Board[i][j] = 0
 		switch cases {
 		case 1:
 			i = i + 2
@@ -172,80 +173,80 @@ func MinMove(client *api.Client,cases int) {
 			i = i - 2
 			j = j - 2
 		}
-		if board[i][j]==0|| board[i][j]>8 {
-			board[i][j]= RedMin
-		}else {
+		if Board[i][j] == 0 || Board[i][j] > 8 {
+			Board[i][j] = RedMin
+		} else {
 			return
 		}
-	}else {
-		i,j:= FindChess(BlackMin)
-		fmt.Printf("board[%v][%v]",i,j)
-		board[i][j]=0
+	} else {
+		i, j := FindChess(BlackMin)
+		fmt.Printf("board[%v][%v]", i, j)
+		Board[i][j] = 0
 		switch cases {
 		case 1:
-			i=i+2
-			j=j+2
+			i = i + 2
+			j = j + 2
 		case 2:
-			i=i-2
-			j=j+2
+			i = i - 2
+			j = j + 2
 		case 3:
-			i=i+2
-			j=j-2
+			i = i + 2
+			j = j - 2
 		case 4:
-			i=i-2
-			j=j-2
+			i = i - 2
+			j = j - 2
 		}
-		if board[i][j]<8 {
-			board[i][j]= BlackMin
-		}else {
+		if Board[i][j] < 8 {
+			Board[i][j] = BlackMin
+		} else {
 			return
 		}
 	}
 }
-func SoldMove(client *api.Client,cases int) {
-	if client.Typ==0 {
-		i,j:= FindChess(RedSold)
+func SoldMove(client *api.Client, cases int) {
+	if client.Typ == 0 {
+		i, j := FindChess(RedSold)
 		switch cases {
 		case 1:
-			i=i+1
-			j=j+1
+			i = i + 1
+			j = j + 1
 		case 2:
-			i=i-1
-			j=j+1
+			i = i - 1
+			j = j + 1
 		case 3:
-			i=i-1
-			j=j-1
+			i = i - 1
+			j = j - 1
 		case 4:
-			i=i+1
-			j=j-1
+			i = i + 1
+			j = j - 1
 		}
-		if i>10||i<8||j<3||j>5 {
+		if i > 10 || i < 8 || j < 3 || j > 5 {
 			return
-		}else if board[i][j] < 8 {
+		} else if Board[i][j] < 8 {
 			return
 		}
-		board[i][j]= RedSold
-	}else{
-		i,j:= FindChess(BlackSold)
+		Board[i][j] = RedSold
+	} else {
+		i, j := FindChess(BlackSold)
 		switch cases {
 		case 1:
-			i=i+1
-			j=j+1
+			i = i + 1
+			j = j + 1
 		case 2:
-			i=i-1
-			j=j+1
+			i = i - 1
+			j = j + 1
 		case 3:
-			i=i-1
-			j=j-1
+			i = i - 1
+			j = j - 1
 		case 4:
-			i=i+1
-			j=j-1
+			i = i + 1
+			j = j - 1
 		}
-		if i>2||i<0||j<3||j>5 {
+		if i > 2 || i < 0 || j < 3 || j > 5 {
 			return
-		}else if board[i][j] > 8 {
+		} else if Board[i][j] > 8 {
 			return
 		}
-		board[i][j]= BlackSold
+		Board[i][j] = BlackSold
 	}
 }

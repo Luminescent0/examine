@@ -1,8 +1,11 @@
 package main
 
-import "examine/api"
+import (
+	"examine/api"
+	"examine/dao"
+)
 
-func main()  {
+func main() {
 	api.InitEngine()
-
+	dao.InitDB()
 }
