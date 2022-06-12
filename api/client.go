@@ -40,14 +40,19 @@ func HandleNewConnection(c *gin.Context) {
 		return
 	}
 	log.Println("new connection")
+	roomId := c.PostForm("roomId")
 	newClient := Client{
 		Id:       GenUserId(),
 		Username: "",
 		Coon:     coon,
 		Status:   0,
 		Typ:      0,
-		Room:     Room{Id: GenRandomNum()},
 	}
+	if roomId != "" {
+		newClient.Room.Id = roomId
+	} else {
+		newClient.Room.Id = GenRandomNum()
+	} //这里不对房间号是否存在作验证(我不会qaq),如果用户输的房间号是不存在的，就当执行了一次自定义的随机数吧(.
 	Clients = append(newClient.Room.Clients, &newClient)
 	var intChan chan int
 	intChan = make(chan int, 1)

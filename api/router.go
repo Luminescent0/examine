@@ -12,6 +12,7 @@ func InitEngine() {
 	r := gin.Default()
 	r.GET("/login", login)
 	r.GET("/register", register)
+	r.GET("/joinRoom", JwtAuthMiddleware)
 	r.GET("/ws", JwtAuthMiddleware, HandleNewConnection)
 	err := r.Run(*addr)
 	if err != nil {
