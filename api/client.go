@@ -129,35 +129,44 @@ func (client *Client) StartListening() {
 		}
 	}
 	service.InitBoard()
+	for {
+		Operate(client)
+	}
+}
+func read(client *Client) {
+	_, content, err := client.Coon.ReadMessage()
+	if err != nil {
+		log.Println(err)
+		err := client.Coon.Close()
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		return
+	}
+	str := strings.Split(string(content), " ")
+	if len(str) != 2 { //第一个数字指定要走的棋子，第二个数字决定case
+		fmt.Println("can not parse it")
+		return
+	}
+	IChoose, ICase := str[0], str[1]
+	choose, _ := strconv.Atoi(IChoose)
+	cases, _ := strconv.Atoi(ICase)
+	service.Operate(choose, client, cases)
+	err = client.Coon.WriteJSON(service.Board)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+}
+func Operate(client *Client) {
 	var Chan chan byte
 	Chan = make(chan byte, 1)
-	for {
+	arr := client.Room.Clients
+	if arr[0].Typ == 1 {
 		Chan <- 1
-		_, content, err := client.Coon.ReadMessage()
-		if err != nil {
-			log.Println(err)
-			err := client.Coon.Close()
-			if err != nil {
-				log.Println(err)
-				return
-			}
-			return
-		}
-		str := strings.Split(string(content), " ")
-		if len(str) != 2 { //第一个数字指定要走的棋子，第二个数字决定case
-			fmt.Println("can not parse it")
-			continue
-		}
-		IChoose, ICase := str[0], str[1]
-		choose, _ := strconv.Atoi(IChoose)
-		cases, _ := strconv.Atoi(ICase)
-		service.Operate(choose, client, cases)
-		err = client.Coon.WriteJSON(service.Board)
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		<-Chan //防止双方同时走子(但是其实会出现一方一直走子的情况吧.
-
+		read(arr[0])
 	}
+	read(arr[1])
+	<-Chan
 }
