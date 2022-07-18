@@ -1,35 +1,33 @@
-package service
+package api
 
 import (
-	"examine/api"
 	"fmt"
 )
 
 var Board [10][9]int
 
 const (
-	RedGen     = 1  //帅
-	RedSold    = 2  //仕
-	RedMin     = 3  //相
-	RedHorse   = 4  //马
-	RedVeh     = 5  //车
-	RedArm     = 6  //兵
-	RedGun     = 7  //炮
-	BlackGen   = 11 //帅
-	BlackSold  = 12 //仕
-	BlackMin   = 13 //象
-	BlackHorse = 14 //马
-	BlackVeh   = 15 //车
-	BlackArm   = 16 //兵
-	BlackGun   = 17 //炮
+	RedGen     = iota + 1  //帅
+	RedSold                //仕
+	RedMin                 //相
+	RedHorse               //马
+	RedVeh                 //车
+	RedArm                 //兵
+	RedGun                 //炮
+	BlackGen   = iota + 11 //帅
+	BlackSold              //仕
+	BlackMin               //象
+	BlackHorse             //马
+	BlackVeh               //车
+	BlackArm               //兵
+	BlackGun               //炮
 
 )
 
-func Operate(choose int, client *api.Client, cases int) {
+func Operate(choose int, client *Client, cases int) {
 	switch choose {
 	case 1:
 		HorseMove(client, cases)
-
 	case 2:
 		MinMove(client, cases)
 	case 3:
@@ -81,7 +79,7 @@ func FindChess(Chess int) (i, j int) {
 	fmt.Println(i, j)
 	return i, j
 }
-func HorseMove(client *api.Client, cases int) {
+func HorseMove(client *Client, cases int) {
 	if client.Typ == 0 {
 		i, j := FindChess(RedHorse)
 		Board[i][j] = 0
@@ -148,13 +146,11 @@ func HorseMove(client *api.Client, cases int) {
 		}
 		if Board[i][j] < 8 {
 			Board[i][j] = BlackHorse
-		} else {
-			return
 		}
 	}
 }
 
-func MinMove(client *api.Client, cases int) {
+func MinMove(client *Client, cases int) {
 	if client.Typ == 0 {
 		i, j := FindChess(RedMin)
 		fmt.Printf("board[%v][%v]", i, j)
@@ -203,7 +199,7 @@ func MinMove(client *api.Client, cases int) {
 		}
 	}
 }
-func SoldMove(client *api.Client, cases int) {
+func SoldMove(client *Client, cases int) {
 	if client.Typ == 0 {
 		i, j := FindChess(RedSold)
 		switch cases {

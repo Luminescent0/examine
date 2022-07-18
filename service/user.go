@@ -19,13 +19,6 @@ func IsPasswordCorrect(username, password string) (bool, error) {
 		if !flag {
 			return false, err
 		}
-		//flag = errors.Is(err,gorm.ErrEmptySlice)
-		//if !flag {
-		//	return false,err
-		//}
-		//if err == sql.ErrNoRows {
-		//	return false, nil
-		//}
 		fmt.Println(username) //验证是否ErrNoRows
 		return false, err
 	}

@@ -55,12 +55,6 @@ func JwtAuthMiddleware(ctx *gin.Context) {
 		return MySecret, nil
 	})
 	username := token.Claims.(*MyClaims).Username
-	//Time := token.Claims.(*MyClaims).ExpiresAt
-	//if Time < time.Now().Unix() {
-	//	tool.RespSuccessfulWithDate(ctx, gin.H{"msg": "token过期"})
-	//	ctx.Abort()
-	//	return
-	//}
 	if err != nil {
 		fmt.Println("parse token failed err", err)
 		tool.RespInternalError(ctx)

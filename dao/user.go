@@ -8,7 +8,6 @@ import (
 func SelectUserByUsername(username string) (model.User, error) {
 	user := model.User{}
 	err := dB.Table("user").Where("username=?", username).Find(&user)
-	//err = dB.QueryRow("select id, password from user where username = ?", username).Scan(&user.Id, &user.Password)
 	fmt.Println(err.Error)
 	if err.Error != nil {
 		return user, err.Error

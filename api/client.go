@@ -1,7 +1,6 @@
 package api
 
 import (
-	"examine/service"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -128,9 +127,9 @@ func (client *Client) StartListening() {
 			}
 		}
 	}
-	service.InitBoard()
+	InitBoard()
 	for {
-		Operate(client)
+		Operate1(client)
 	}
 }
 func read(client *Client) {
@@ -140,7 +139,6 @@ func read(client *Client) {
 		err := client.Coon.Close()
 		if err != nil {
 			log.Println(err)
-			return
 		}
 		return
 	}
@@ -152,14 +150,14 @@ func read(client *Client) {
 	IChoose, ICase := str[0], str[1]
 	choose, _ := strconv.Atoi(IChoose)
 	cases, _ := strconv.Atoi(ICase)
-	service.Operate(choose, client, cases)
-	err = client.Coon.WriteJSON(service.Board)
+	Operate(choose, client, cases)
+	err = client.Coon.WriteJSON(Board)
 	if err != nil {
 		log.Println(err)
-		return
 	}
+	return
 }
-func Operate(client *Client) {
+func Operate1(client *Client) {
 	var Chan chan byte
 	Chan = make(chan byte, 1)
 	arr := client.Room.Clients

@@ -5,3 +5,7 @@ type User struct {
 	Username string `json:"username" validate:"min=4,max=10"`
 	Password string `json:"password" validate:"min=6,max=16"`
 }
+type UserFields struct {
+	User   *User
+	Fields []interface{}
+}

@@ -38,7 +38,7 @@ func login(ctx *gin.Context) {
 		return
 	}
 	tool.RespSuccessfulWithDate(ctx, token)
-	return
+
 }
 func register(ctx *gin.Context) {
 	username, password := verify(ctx)
